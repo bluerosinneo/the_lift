@@ -45,34 +45,29 @@
     // let MyCapacity = 5;
 
     // down and down
-    let MyQueue = [
-      [], // G
-      [0], // 1
-      [], // 2
-      [], // 3
-      [2], // 4
-      [3], // 5
-      [], // 6
-    ];
-    let MyCapacity = 5
+    // let MyQueue = [
+    //   [], // G
+    //   [0], // 1
+    //   [], // 2
+    //   [], // 3
+    //   [2], // 4
+    //   [3], // 5
+    //   [], // 6
+    // ];
+    // let MyCapacity = 5
+
+    // Yo-Yo
+    let MyQueue = [ [], [], [ 4, 4, 4, 4 ], [], [ 2, 2, 2, 2 ], [], [] ];
+    let MyCapacity = 2;
 
     console.log(lift(MyQueue, MyCapacity));
 
-    function lift(queue, capacity){
-        // but .splice() might be better
-        // .splice(location, #ofTimes)
+    function lift(queues, capacity){
 
-        // test splice
-        // let testSplice = [0,1,2,3,4,5];
-        // console.log(testSplice);
-        // console.log(testSplice.splice(2,1)[0]);
-        // console.log(testSplice);
-
-        // initial calls
-        // idea is to make an order to visit floors
-        // will use to tell if we are done
+        // console.log(queues); // debugging
+        // console.log(capacity); // debuggin
         let elevator = {
-            newQueue : queue,
+            newQueue : queues,
             calls : {}, // keep track of floors that still have people (key, value)~(floor, 1)
             up : true, // indicating if elevator is going up (or down)
             currentFloor : 0, // what floor is the elivator at
@@ -106,7 +101,7 @@
                         this.riders[wantingRider] = 1;
                     }
                     this.totalRiders = this.totalRiders + 1;
-                    return true;
+                    return true
                 }
                 return false;
             },
@@ -118,8 +113,9 @@
                 let addedRider = false;
                 while( index < wantingRiderBar.length ){
                     if( ( this.up && (wantingRiderBar[index] > this.currentFloor) ) || ( !(this.up) && (wantingRiderBar[index] < this.currentFloor) ) ){
+                        addedRider = true; // if someone was able to at least call the elevator, return true
                         if(this.addRider(wantingRiderBar[index])){
-                            addedRider = true;
+                            
                             wantingRiderBar.splice(index,1);
                         }
                         else{
@@ -141,100 +137,70 @@
                 }
                 return false;
             },
+            // debugging
+            showCurrentQueue : function(){
+                for(let i = this.newQueue.length -1; i >= 0; i--){
+                    console.log(i +" : "+ this.newQueue[i]);
+                }
+            },
+            visitFloor : function(floor){
+                // note the current floor
+                this.currentFloor = floor;
+                // did anyone get off or on (in that order)
+                let addFloor = false; // did we do anything on this floor
+                // see if anyone needs off
+                if(this.removeRider(floor) == true){
+                    addFloor = true;
+                }
+                // see if anyone needs to get on
+                if(this.addRiderBar(this.newQueue[floor]) == true){
+                    addFloor = true;
+                }
+                // if we used the floor add it to our floorHistory
+                if(addFloor == true){
+                    this.addFloor(floor);
+                }
+
+                // are there any people still needed rides on this floor
+                if(this.newQueue[floor].length > 0){
+                    this.addCall(floor);
+                }
+                else{
+                    this.removeCall(floor);
+                }
+
+            },
+            addFloor : function(floor){
+                if(this.floorHistory[this.floorHistory.length - 1] != floor){
+                    this.floorHistory.push(floor);
+                }
+            },
             goUpThenDown : function(){
-                this.floorHistory.push(0);
+                this.addFloor(0);
                 do{
                     // go up
                     this.up = true;
                     for(let i = 0; i < this.newQueue.length; i++){
-                        this.currentFloor = i;
-                        // did anyone get off or on (in that order)
-                        let addFloor = false;
-                        if(this.removeRider(i) == true){
-                            addFloor = true;
-                        }
-                        if(this.addRiderBar(this.newQueue[i]) == true){
-                            addFloor = true;
-                        }
-                        if(addFloor == true){
-                            this.floorHistory.push(i);
-                        }
+                        this.visitFloor(i);
 
-                        // are there any people still needed rides on this floor
-                        if(this.newQueue[i].length > 0){
-                            this.addCall(i);
-                        }
-                        else{
-                            this.removeCall(i);
-                        }
-
-                        // console.log(this.riders);
                     }
 
                     // go down
                     this.up = false;
                     for(let i = this.newQueue.length - 1; i >= 0; i--){
-                        this.currentFloor = i;
-                        // did anyone get off or on (in that order)
-                        let addFloor = false;
-                        if(this.removeRider(i) == true){
-                            addFloor = true;
-                        }
-                        if(this.addRiderBar(this.newQueue[i]) == true){
-                            addFloor = true;
-                        }
-                        if(addFloor == true){
-                            this.floorHistory.push(i);
-                        }
-
-                        // are there any people still needed rides on this floor
-                        if(this.newQueue[i].length > 0){
-                            this.addCall(i);
-                        }
-                        else{
-                            this.removeCall(i);
-                        }
+                        this.visitFloor(i);
 
                     }
 
-                    // console.log(this.calls);
-                    // console.log(this.floorHistory)
-
                 }
                 while(this.callsLength() > 0)
-                this.floorHistory.push(0);
+                this.addFloor(0);
             },
 
 
         };
 
         elevator.goUpThenDown();
-        // console.log(elevator.floorHistory);
-
-        // let testRiders = [0,9,1,8,2,7,3,6,4,5];
-        // elevator.currentFloor = 5
-        // elevator.riderCap = 4
-        // elevator.up = false;
-
-        // console.log(testRiders);
-        // elevator.addRiderBar(testRiders);
-
-        // console.log(elevator.riders);
-        // console.log(elevator.totalRiders);
-
-        // console.log(testRiders);
-
-        // elevator.removeRider(1);
-
-        // console.log(elevator.riders);
-        // console.log(elevator.totalRiders);
-
-        // elevator
-
-        
-
-
-        
 
         return elevator.floorHistory;
     }
